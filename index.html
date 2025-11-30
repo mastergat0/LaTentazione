@@ -1,0 +1,273 @@
+
+<!-- Dashboard de Ventas Joyería - Single HTML File -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Dashboard Ventas Joyería</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #ffe6f2;
+        color: #660033;
+    }
+    header {
+        background: linear-gradient(90deg, #ff66a3, #ff99c8);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    .container {
+        padding: 20px;
+    }
+    .controls {
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+    select {
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid #cc6699;
+        background: #fff0f7;
+        color: #660033;
+    }
+    canvas {
+        max-width: 100%;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 10px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    th, td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #ffccdf;
+        text-align: center;
+        font-size: 12px;
+    }
+    th {
+        background: #ffb3d9;
+        color: #660033;
+    }
+    tr:nth-child(even) {
+        background: #fff5fa;
+    }
+    .stat-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .card {
+        background: #fff;
+        padding: 10px 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        min-width: 150px;
+    }
+    .card-title {
+        font-size: 12px;
+        color: #993366;
+        margin-bottom: 4px;
+    }
+    .card-value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #cc0066;
+    }
+</style>
+</head>
+<body>
+<header>
+    <h1>Dashboard de Ventas de Joyería</h1>
+    <p>Filtro por producto y análisis mensual (tema rosa)</p>
+</header>
+<div class="container">
+    <div class="controls">
+        <label for="productSelect">Producto:</label>
+        <select id="productSelect"></select>
+    </div>
+
+    <div class="stat-cards">
+        <div class="card">
+            <div class="card-title">Total anual del producto</div>
+            <div class="card-value" id="totalProducto">-</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Mes con más ventas</div>
+            <div class="card-value" id="mejorMes">-</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Promedio mensual</div>
+            <div class="card-value" id="promedioMensual">-</div>
+        </div>
+    </div>
+
+    <canvas id="chartProducto" height="120"></canvas>
+
+    <table id="tablaDatos">
+        <thead>
+            <tr id="tablaHeader"></tr>
+        </thead>
+        <tbody id="tablaBody"></tbody>
+    </table>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Dataset embebido desde Python
+    const data = [{"Producto/Servicio": "Anillo Luz de Luna", "Enero": 132, "Febrero": 177, "Marzo": 88, "Abril": 133, "Mayo": 135, "Junio": 75, "Julio": 172, "Agosto": 118, "Septiembre": 103, "Octubre": 28, "Noviembre": 77, "Diciembre": 181}, {"Producto/Servicio": "Collar Aurora Dorada", "Enero": 72, "Febrero": 172, "Marzo": 183, "Abril": 86, "Mayo": 37, "Junio": 93, "Julio": 70, "Agosto": 97, "Septiembre": 196, "Octubre": 61, "Noviembre": 125, "Diciembre": 68}, {"Producto/Servicio": "Aretes Estrella Polar", "Enero": 102, "Febrero": 124, "Marzo": 77, "Abril": 136, "Mayo": 52, "Junio": 154, "Julio": 135, "Agosto": 69, "Septiembre": 66, "Octubre": 63, "Noviembre": 125, "Diciembre": 199}, {"Producto/Servicio": "Pulsera Amarre del Alma", "Enero": 181, "Febrero": 155, "Marzo": 151, "Abril": 118, "Mayo": 114, "Junio": 107, "Julio": 198, "Agosto": 76, "Septiembre": 91, "Octubre": 161, "Noviembre": 158, "Diciembre": 161}, {"Producto/Servicio": "Dije Flor de Jade", "Enero": 116, "Febrero": 132, "Marzo": 26, "Abril": 102, "Mayo": 92, "Junio": 170, "Julio": 113, "Agosto": 93, "Septiembre": 94, "Octubre": 21, "Noviembre": 154, "Diciembre": 84}, {"Producto/Servicio": "Set Reina del Sol", "Enero": 94, "Febrero": 171, "Marzo": 21, "Abril": 64, "Mayo": 130, "Junio": 193, "Julio": 120, "Agosto": 109, "Septiembre": 109, "Octubre": 126, "Noviembre": 126, "Diciembre": 125}, {"Producto/Servicio": "Grabado Personalizado", "Enero": 138, "Febrero": 199, "Marzo": 158, "Abril": 44, "Mayo": 24, "Junio": 36, "Julio": 75, "Agosto": 55, "Septiembre": 150, "Octubre": 46, "Noviembre": 116, "Diciembre": 110}, {"Producto/Servicio": "Limpieza y Restauraci\u00f3n", "Enero": 75, "Febrero": 106, "Marzo": 36, "Abril": 155, "Mayo": 120, "Junio": 77, "Julio": 195, "Agosto": 153, "Septiembre": 123, "Octubre": 117, "Noviembre": 160, "Diciembre": 175}, {"Producto/Servicio": "Ajuste de Talla", "Enero": 149, "Febrero": 44, "Marzo": 147, "Abril": 60, "Mayo": 164, "Junio": 53, "Julio": 163, "Agosto": 171, "Septiembre": 167, "Octubre": 122, "Noviembre": 134, "Diciembre": 165}, {"Producto/Servicio": "Dise\u00f1o de Joyer\u00eda a Medida", "Enero": 35, "Febrero": 68, "Marzo": 182, "Abril": 104, "Mayo": 164, "Junio": 123, "Julio": 151, "Agosto": 114, "Septiembre": 48, "Octubre": 33, "Noviembre": 87, "Diciembre": 148}];
+
+    const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+    const select = document.getElementById("productSelect");
+    const totalProductoEl = document.getElementById("totalProducto");
+    const mejorMesEl = document.getElementById("mejorMes");
+    const promedioMensualEl = document.getElementById("promedioMensual");
+    const tablaHeader = document.getElementById("tablaHeader");
+    const tablaBody = document.getElementById("tablaBody");
+
+    // Poblar opciones de productos
+    function initSelect() {
+        select.innerHTML = "";
+        data.forEach(function(row, idx) {
+            const opt = document.createElement("option");
+            opt.value = row["Producto/Servicio"];
+            opt.textContent = row["Producto/Servicio"];
+            if (idx === 0) { opt.selected = true; }
+            select.appendChild(opt);
+        });
+    }
+
+    // Construir cabecera de tabla
+    function buildTableHeader() {
+        tablaHeader.innerHTML = "";
+        const thProd = document.createElement("th");
+        thProd.textContent = "Producto/Servicio";
+        tablaHeader.appendChild(thProd);
+        meses.forEach(function(m) {
+            const th = document.createElement("th");
+            th.textContent = m;
+            tablaHeader.appendChild(th);
+        });
+    }
+
+    // Construir cuerpo de tabla (todas las filas)
+    function buildTableBody() {
+        tablaBody.innerHTML = "";
+        data.forEach(function(row) {
+            const tr = document.createElement("tr");
+            const tdProd = document.createElement("td");
+            tdProd.textContent = row["Producto/Servicio"];
+            tr.appendChild(tdProd);
+            meses.forEach(function(m) {
+                const td = document.createElement("td");
+                td.textContent = row[m];
+                tr.appendChild(td);
+            });
+            tablaBody.appendChild(tr);
+        });
+    }
+
+    // Encontrar registro de producto seleccionado
+    function getSelectedRecord() {
+        const val = select.value;
+        return data.find(function(row) { return row["Producto/Servicio"] === val; });
+    }
+
+    let chartProducto;
+
+    function updateStatsAndChart() {
+        const rec = getSelectedRecord();
+        if (!rec) return;
+
+        const values = meses.map(function(m) { return rec[m]; });
+        const total = values.reduce(function(a,b){ return a + b; }, 0);
+        const promedio = total / values.length;
+        let maxVal = -Infinity;
+        let maxMes = "";
+        values.forEach(function(v, idx) {
+            if (v > maxVal) {
+                maxVal = v;
+                maxMes = meses[idx];
+            }
+        });
+
+        totalProductoEl.textContent = total.toFixed(0);
+        promedioMensualEl.textContent = promedio.toFixed(1);
+        mejorMesEl.textContent = maxMes + " (" + maxVal + ")";
+
+        const ctx = document.getElementById("chartProducto").getContext("2d");
+        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, "rgba(255, 105, 180, 0.9)");
+        gradient.addColorStop(1, "rgba(255, 192, 203, 0.2)");
+
+        if (chartProducto) {
+            chartProducto.destroy();
+        }
+
+        chartProducto = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: rec["Producto/Servicio"],
+                    data: values,
+                    borderColor: "#ff1493",
+                    backgroundColor: gradient,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: "#ffffff",
+                    pointBorderColor: "#ff1493",
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.parsed.y + " unidades";
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: "#660033" },
+                        grid: { color: "#ffe0ef" }
+                    },
+                    y: {
+                        ticks: { color: "#660033" },
+                        grid: { color: "#ffe0ef" }
+                    }
+                }
+            }
+        });
+    }
+
+    // Inicializar dashboard
+    initSelect();
+    buildTableHeader();
+    buildTableBody();
+    updateStatsAndChart();
+
+    select.addEventListener("change", updateStatsAndChart);
+</script>
+</body>
+</html>
